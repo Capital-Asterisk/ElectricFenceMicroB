@@ -24,7 +24,7 @@ void Start()
     // make some randomness random
     SetRandomSeed(time.systemTime);
 
-    ChangeScene(@S_VIntro::Salamander);
+    ChangeScene(@S_Menu::Salamander);
 
 }
 

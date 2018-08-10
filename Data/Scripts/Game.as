@@ -17,6 +17,40 @@ class Hubhub : ScriptObject
 
 }
 
+namespace S_Menu
+{
+// Game stuff go here
+void Salamander(int stats)
+{
+    if (stats == 1)
+    {
+        //scene_.LoadXML(cache.GetFile("Scenes/Scene1.xml"));
+        
+        UIElement@ menuUI = ui.LoadLayout(cache.GetResource("XMLFile", "UI/Menu.xml"));
+        menuUI.SetSize(1280, 720);
+        menuUI.SetPosition((graphics.width - menuUI.width) / 2, (graphics.height - menuUI.height) / 2);
+        
+        ui.root.AddChild(menuUI);
+
+        menuSounds_ = scene_.CreateComponent("SoundSource");
+        menuSounds_.soundType = SOUND_MUSIC;
+
+        Sound@ a = cache.GetResource("Sound", "Sounds/EFMBMenu.ogg");
+        a.looped = true;
+        menuSounds_.Play(a);
+        menuSounds_.frequency *= timescale_;
+
+
+        //Viewport@ viewport = Viewport(scene_, scene_.GetChild("CameraNode").GetComponent("Camera"));
+        //renderer.viewports[0] = viewport;
+
+    }
+    //Print(RandomInt(11, 124));
+}
+}
+
+
+
 namespace S_Game
 {
 

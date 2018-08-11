@@ -3,7 +3,7 @@ funcdef void SCENEFUNCTION(int);
 Scene@ scene_;
 SoundSource@ menuSounds_;
 SCENEFUNCTION@ sceneFunc_;
-String log_;
+String log_ = "Coriolis Motorcyc";
 Array<Room> rooms_;
 bool ffirst_;
 float delta_;
@@ -19,4 +19,9 @@ void ChangeScene(SCENEFUNCTION@ to)
     sceneFunc_ = to;
     time_ = 0;
     ffirst_ = true;
+}
+
+int bint(bool b)
+{
+    return b ? 1 : 0;
 }

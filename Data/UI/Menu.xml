@@ -31,4 +31,15 @@
 			<attribute name="Text" value="START GAME" />
 		</element>
 	</element>
+	<element type="Text">
+		<attribute name="Position" value="85 690" />
+		<attribute name="Pivot" value="0 0" />
+		<attribute name="Top Left Color" value="0.85 0.85 0.85 1" />
+		<attribute name="Top Right Color" value="0.85 0.85 0.85 1" />
+		<attribute name="Bottom Left Color" value="0.85 0.85 0.85 1" />
+		<attribute name="Bottom Right Color" value="0.85 0.85 0.85 1" />
+		<attribute name="Font" value="Font;Fonts/Louis George Cafe.ttf" />
+		<attribute name="Font Size" value="16" />
+		<attribute name="Text" value="HOHOHOHO PUT SOMETHING HERE, made for LUDUM DARE 42 I MIGHT NOT FINISH THIS IN TIME HEHEHEHEHEHEHEHEHEHEHEHEHEHEHEHE" />
+	</element>
 </element>

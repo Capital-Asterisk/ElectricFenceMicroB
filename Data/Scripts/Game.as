@@ -17,6 +17,18 @@ class Hubhub : ScriptObject
 
 }
 
+void GenerateGunModel()
+{
+
+
+}
+
+
+void PlayTheDamnGame()
+{
+    ChangeScene(@S_Game::Salamander);
+}
+
 namespace S_Menu
 {
 // Game stuff go here
@@ -24,7 +36,7 @@ void Salamander(int stats)
 {
     if (stats == 1)
     {
-        //scene_.LoadXML(cache.GetFile("Scenes/Scene1.xml"));
+        scene_.LoadXML(cache.GetFile("Scenes/MenuScene.xml"));
         
         UIElement@ menuUI = ui.LoadLayout(cache.GetResource("XMLFile", "UI/Menu.xml"));
         menuUI.SetSize(1280, 720);
@@ -40,15 +52,18 @@ void Salamander(int stats)
         menuSounds_.Play(a);
         menuSounds_.frequency *= timescale_;
 
+        Viewport@ viewport = Viewport(scene_, scene_.GetChild("CameraNode").GetComponent("Camera"));
+        renderer.viewports[0] = viewport;
 
-        //Viewport@ viewport = Viewport(scene_, scene_.GetChild("CameraNode").GetComponent("Camera"));
-        //renderer.viewports[0] = viewport;
+        Button@ buttplay = menuUI.GetChild("ButtPlay", true);
+        SubscribeToEvent(buttplay, "Released", "PlayTheDamnGame");
 
+    } else {
+        scene_.GetChild("SpinMe").Rotate(Quaternion(0, 0, delta_ * 5), TS_LOCAL);
     }
     //Print(RandomInt(11, 124));
 }
 }
-
 
 
 namespace S_Game
@@ -73,6 +88,7 @@ void Salamander(int stats)
 
         Viewport@ viewport = Viewport(scene_, scene_.GetChild("CameraNode").GetComponent("Camera"));
         renderer.viewports[0] = viewport;
+
 
     }
     Print(RandomInt(11, 124));

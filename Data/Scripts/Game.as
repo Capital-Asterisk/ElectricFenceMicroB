@@ -10,10 +10,44 @@ class Hubhub : ScriptObject
 
     void FixedUpdate(float delta)
     {
-        Print(RandomInt(200, 300));
+        Print(RandomInt(0, 3));
         cast<RigidBody@>(node.GetComponent("RigidBody")).linearVelocity = Vector3(0, 1, 0);
     }
 
+
+}
+
+class Room
+{
+    bool generated;
+    int x, y, wid, hei, metype;
+    Array<Array<int>> buckets;
+
+    Room()
+    {
+        generated = false;
+    }
+    
+    void Jenerate(int entX, int entY, float doorX, float doorZ) {
+        buckets.Resize(20);
+        log_ = "coriolis motorcycle";
+        StringHash hash(log_);
+        Print(hash.value);
+        SetRandomSeed(hash.value);
+        metype = RandomInt(0, 3);
+        switch ()
+        {
+        case 0:
+            // small boi
+            break;
+        case 1:
+            // big boi
+            break;
+        case 2:
+            // long boi
+            break;
+        }
+    }
 
 }
 
@@ -22,6 +56,7 @@ void GenerateGunModel()
 
 
 }
+
 
 
 void PlayTheDamnGame()
@@ -89,9 +124,11 @@ void Salamander(int stats)
         Viewport@ viewport = Viewport(scene_, scene_.GetChild("CameraNode").GetComponent("Camera"));
         renderer.viewports[0] = viewport;
 
+        Room r;
+        r.Jenerate(int entX, int entY, 0.0, 0.0) ;
 
     }
-    Print(RandomInt(11, 124));
+    //Print(RandomInt(11, 124));
 }
 
 }

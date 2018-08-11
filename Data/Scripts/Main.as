@@ -9,7 +9,7 @@ void Start()
 
     // enable cursor
     input.mouseVisible = true;
-    graphics.windowTitle = "Blank Vendalenger template";
+    graphics.windowTitle = "Electric Fence - Micro-B";
 
     // Set default UI style
     XMLFile@ style = cache.GetResource("XMLFile", "UI/DefaultStyle.xml");
@@ -45,16 +45,6 @@ void HandleUpdate(StringHash eventType, VariantMap& eventData)
     delta_ = eventData["TimeStep"].GetFloat();
     time_ += delta_ * timescale_;
     sceneFunc_(stat);
-}
-
-void ChangeScene(SCENEFUNCTION@ to)
-{
-    ui.root.RemoveAllChildren();
-    scene_.RemoveAllChildren();
-    //ui.root.defaultStyle = cache.GetResource("XMLFile", "UI/DefaultStyle.xml");
-    sceneFunc_ = to;
-    time_ = 0;
-    ffirst_ = true;
 }
 
 namespace S_VIntro

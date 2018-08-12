@@ -20,26 +20,164 @@ class Hubhub : ScriptObject
 class Meat : ScriptObject
 {
 
-    int health;
+    float health;
 
     Meat()
     {
         Print("enemy was made");
     }
 
-    void WorldCollision(VariantMap& eventData)
-    {
-        Print("MASH");
-    }
+
 
 }
 
 class BoxCaterpillar : Meat
 {
+    int randoms;
+    int deathAnimation = 40;
     
-    void FixedUpdate(float delta)
+    BoxCaterpillar()
     {
-        node.rotation = Quaternion(0, node.rotation.yaw, Sin(time_ * 180) * 30.0);
+        randoms = RandomInt(0, 360);
+    }
+    
+    void DelayedStart()
+    {
+        SubscribeToEvent(node, "NodeCollision", "HandleNodeCollision");
+    }
+    
+    void HandleNodeCollision(StringHash evtType, VariantMap& evtData)
+    {
+        Node@ smashed = evtData["OtherNode"].GetPtr();
+        if (smashed is S_Game::player_)
+        {
+            S_Game::integrity_ -= 0.02;
+            cast<RigidBody>(node.GetComponent("RigidBody")).ApplyImpulse(node.rotation * Vector3::BACK);
+        }
+    }
+    
+    void FixedUpdate(float data)
+    {
+        
+        if (health <= 0)
+        {
+            deathAnimation --;
+            if (deathAnimation == 39)
+            {
+                node.RemoveComponent("RigidBody");
+                node.RemoveComponent("StaticModel");
+                cast<SoundSource>(node.GetComponent("SoundSource")).Play(cache.GetResource("Sound", "Sounds/EnemyExplode.ogg"));
+                cast<ParticleEmitter>(node.GetComponent("ParticleEmitter")).emitting = true;
+            } else if (deathAnimation == 0)
+            {
+                node.Remove();
+            }
+            
+        } else {
+            node.LookAt(S_Game::player_.position, Vector3::UP, TS_WORLD);
+            cast<RigidBody>(node.GetComponent("RigidBody")).ApplyForce(node.rotation * Vector3::FORWARD * 0.5);
+            node.position = Vector3(node.position.x, 0.5, node.position.z);
+            node.rotation = Quaternion(0, node.rotation.yaw, Sin(time_ * 180 + randoms) * 30.0);
+        }
+    }
+}
+
+class Barriochop : Meat
+{
+    int randoms;
+    int deathAnimation = 40;
+    
+    Barriochop()
+    {
+        randoms = RandomInt(0, 360);
+    }
+    
+    void DelayedStart()
+    {
+        SubscribeToEvent(node, "NodeCollision", "HandleNodeCollision");
+    }
+    
+    void HandleNodeCollision(StringHash evtType, VariantMap& evtData)
+    {
+        Node@ smashed = evtData["OtherNode"].GetPtr();
+        if (smashed is S_Game::player_)
+        {
+            S_Game::integrity_ -= 0.01;
+            //cast<RigidBody>(S_Game::player_.GetComponent("RigidBody")).ApplyImpulse(node.rotation * Vector3::BACK);
+        }
+    }
+    
+    void FixedUpdate(float data)
+    {
+        
+        if (health <= 0)
+        {
+            deathAnimation --;
+            if (deathAnimation == 39)
+            {
+                node.RemoveComponent("RigidBody");
+                node.RemoveComponent("StaticModel");
+                cast<SoundSource>(node.GetComponent("SoundSource")).Play(cache.GetResource("Sound", "Sounds/EnemyExplode.ogg"));
+                cast<ParticleEmitter>(node.GetComponent("ParticleEmitter")).emitting = true;
+            } else if (deathAnimation == 0)
+            {
+                node.Remove();
+            }
+            
+        } else {
+            
+        }
+    }
+}
+
+class Generator : Meat
+{
+    int randoms;
+    int deathAnimation = 40;
+    
+    Generator()
+    {
+        randoms = RandomInt(0, 360);
+    }
+    
+    void FixedUpdate(float data)
+    {
+        
+        if (health <= 0)
+        {
+            deathAnimation --;
+            if (deathAnimation == 39)
+            {
+                node.RemoveComponent("RigidBody");
+                node.RemoveComponent("StaticModel");
+                cast<SoundSource>(node.GetComponent("SoundSource")).Play(cache.GetResource("Sound", "Sounds/EnemyExplode.ogg"));
+                cast<ParticleEmitter>(node.GetComponent("ParticleEmitter")).emitting = true;
+            } else if (deathAnimation == 0)
+            {
+               
+                
+                S_Game::currentRoom_.DoorLock(false);
+                S_Game::gameHUD_.GetChild("Minimap").GetChild(S_Game::currentTarget_.name).Remove();
+                S_Game::currentTarget_.Remove();
+                if (scene_.GetChild("Targets").GetChildren().length == 0)
+                {
+                    ChangeScene(WinFunc);
+                }
+                @S_Game::currentTarget_ = @(scene_.GetChild("Targets").GetChildren()[0]);
+                
+                
+                
+                S_Game::barrierSize_ = (node.position - S_Game::currentTarget_.position).length + 300;
+                
+                node.Remove();
+            }
+            
+        } else {
+            //node.LookAt(S_Game::player_.position, Vector3::UP, TS_WORLD);
+            //cast<RigidBody>(node.GetComponent("RigidBody")).ApplyForce(node.rotation * Vector3::FORWARD);
+            //node.position = Vector3(node.position.x, 0.5, node.position.z);
+            //node.rotation = Quaternion(0, node.rotation.yaw, Sin(time_ * 180 + randoms) * 30.0);
+        }
     }
 }
 
@@ -50,11 +188,11 @@ class BSMBullet : ScriptObject
     Vector3 pxt;
     String tgt;
     uint lifetime = 60;
-    int damage;
+    float damage;
 
     BSMBullet()
     {
-        Print("bsm was made");
+        //Print("bsm was made");
     }
 
     void FixedUpdate(float d)
@@ -67,6 +205,7 @@ class BSMBullet : ScriptObject
         lifetime --;
         if (prr.body !is null)
         {
+            
             Node@ boom = prr.body.node;
             if (boom.name.StartsWith("Wall") or boom.name.StartsWith("Door"))
             {
@@ -75,7 +214,16 @@ class BSMBullet : ScriptObject
                 lifetime = 0;
                 S_Game::bulletHits_.Play(S_Game::bulletSnd_);
                 S_Game::bulletHits_.frequency = 44100 * timescale_ * Random(0.9, 1.2);
+            } else if (boom.name.StartsWith("Enemy"))
+            {
+                lifetime = 0;
+                
+                S_Game::bulletHits_.Play(S_Game::bulletHitmarker_);
+                S_Game::bulletHits_.frequency = 44100;
+                Meat@ m = cast<Meat@>(boom.GetScriptObject());
+                m.health -= damage;
             }
+            
         } else {
             
         }
@@ -95,7 +243,8 @@ class Room
     bool generated;
     bool blackFloor;
     Node@ mahnode;
-    int doorlink, wid, hei, metype;
+    int doorlink, wid, hei, metype, enemyCount;
+    uint birbseeds;
     float mmx, mmy;
     //Array<Array<int>> buckets;
     Array<int> doors = {-1, -1, -1, -1}; // top right bottom left
@@ -112,6 +261,30 @@ class Room
         
     }
     
+    void DoorLock(bool lock)
+    {
+        for (int i = 0; i < 4; i ++)
+        {
+            if (doors[i] != -1)
+            {
+                cast<CollisionShape>(mahnode.GetChild("Door" + i).GetComponents()[3]).position = Vector3(0, 2 * bint(!lock), 0);
+            }
+        }
+    }
+    void DoorEnemySpawn()
+    {
+        for (int i = 0; i < 4; i ++)
+        {
+            if (doors[i] != -1 && i != (doorlink + 2) % 4 && metype != 1 && RandomInt(0, 2) == 0)
+            {
+                Node@ door = mahnode.GetChild("Door" + i);
+                S_Game::SpawnEnemy("Barriochop", 300, 0, mahnode.position + door.position + door.rotation * Vector3(0, -0.2, -2), door.rotation * Quaternion(0, 180, 0));
+            }
+        }
+    }
+    
+               
+    
     float DoorDist(int which)
     {
         if (doors[which] == -1)
@@ -125,6 +298,7 @@ class Room
         doorlink = linkdoor;
         StringHash hash(log_);
         Print(hash.value);
+        birbseeds = hash.value;
         SetRandomSeed(hash.value);
         blackFloor = (RandomInt(0, 11) <= 2); // 20% chance of black floor
         metype = RandomInt(0, 3);
@@ -134,11 +308,13 @@ class Room
             // small boia
             wid = RandomInt(6, 10);
             hei = RandomInt(6, 10);
+            enemyCount = RandomInt(0, wid * hei * 0.1);
             break;
         case 1:
             // big boi
             wid = RandomInt(12, 32);
             hei = RandomInt(12, 32);
+            enemyCount = RandomInt(0, wid * hei * 0.1);
             break;
         case 2:
             // long boi
@@ -146,6 +322,7 @@ class Room
             hei = RandomInt(2, 5) + Abs(dirX) * RandomInt(20, 40);
             doors[Abs(dirY)] = RandomInt(0, Min(wid, hei) - 1);
             doors[Abs(dirY) + 2] = RandomInt(0, Min(wid, hei) - 1);
+            
             break;
         }
         if (metype != 2)
@@ -218,9 +395,9 @@ class Room
                 minecraft.model = floorMod;
                 minecraft.material = floorMat;
                 aa.position = Vector3(float(x) - float(wid) / 2 + 0.5, 0, float(y) - float(hei) / 2 + 0.5);
-                S_Game::SpawnEnemy("BoxCaterpillar", 70, 0, aa.position + Vector3(0, 1, 0), Quaternion(0, 0, 0));
             }
         }
+        
         Material@ wallmart = cache.GetResource("Material", "Materials/Wall" + (0) + ".xml");
         Model@ wallmod = cache.GetResource("Model", "Models/Wall.mdl");
         // Top wall
@@ -239,6 +416,33 @@ class Room
             Print("OPPOSITE DOOR: " + oppositeDoor);
             Node@ theDoor = mahnode.GetChild("Door" + oppositeDoor);
             mahnode.position = Vector3(mmx - theDoor.position.x, 0, mmy - theDoor.position.z);
+        }
+        
+        
+        DoorEnemySpawn();
+        if ((S_Game::currentTarget_.position - mahnode.position).length < 40)
+        {
+            DoorLock(true);
+            S_Game::SpawnEnemy("Generator", 1000, 0, mahnode.position, Quaternion(0, 0, 0));
+        }
+        
+        // Stuff spawning
+        switch (metype) {
+        case 0:
+            
+            for (uint i = 0; i < enemyCount ; i ++)
+            {
+                S_Game::SpawnEnemy("BoxCaterpillar", 40, 0, mahnode.position + Vector3(RandomInt(-3, 3), 0, RandomInt(-3, 3)), Quaternion(0, 0, 0));
+            }
+            break;
+        case 1:
+            
+            for (uint i = 0; i < enemyCount ; i ++)
+            {
+                S_Game::SpawnEnemy("BoxCaterpillar", 40, 0, mahnode.position + Vector3(RandomInt(-wid / 2, wid / 2), 0, RandomInt(-hei / 2, hei / 2)), Quaternion(0, 0, 0));
+            }
+            break;
+        
         }
     }
 
@@ -289,14 +493,34 @@ class Gun
             BSMBullet@ so = cast<BSMBullet@>(n.CreateScriptObject(scriptFile, "BSMBullet", LOCAL));
             so.pxt = n.rotation * Vector3(0, 0, 20) + S_Game::playerRB_.linearVelocity;
             so.lifetime = 120;
+            so.damage = damage;
             //so.b = 3;
         }
+        Print("DamagePerShot: " + damage);
         S_Game::muzzleFlash_.brightness = mytier / 8 + float(bulletsPerShot) / 14;
         S_Game::muzzleFlash_.color = laser ? Color(0.2, 0.8, 1.0) : Color(1.0, 0.8, 0.2);
         shakey_ += laser ? 0.1 : float(bulletsPerShot) / 14;
         notsrc.frequency = timescale_ * soundPitch * 44100;
         notsrc.Play(gunSound);
         lastshot = 0;
+    }
+
+    void Default()
+    {
+        rarity = 0;
+        back = 0;
+        barrel = 0;
+        handle = 0;
+        mytier = 1;
+        soundPitch = 1.4;
+        paralell = false;
+        bulletsPerShot = 1;
+        rof = 15;
+        recoil = 3;
+        muzzVelocity = 60;
+        gunSound = cache.GetResource("Sound", "Sounds/Machgun0.ogg");
+        damage = 100 / bulletsPerShot / rof + rarity * 10;
+        nom = "Gotzietek LD42 Autorifle";
     }
 
     void Jenerate(StringHash seed, float tier)
@@ -309,7 +533,7 @@ class Gun
         mytier = tier;
         soundPitch = Random(0.9, 1.3);
         paralell = false;
-        
+        String techType;
         switch (barrel)
         {
         case 0:
@@ -321,6 +545,7 @@ class Gun
             barrelLength = 0.3;
             laser = false;
             gunSound = cache.GetResource("Sound", "Sounds/Shotgun0.ogg");
+            techType = "Auto Double Shotgun";
             break;
         case 1:
             if (RandomInt(0, 2) == 1)
@@ -330,12 +555,14 @@ class Gun
                 recoil = Random(1, 6);
                 muzzVelocity = 60;
                 gunSound = cache.GetResource("Sound", "Sounds/Machgun0.ogg");
+                techType = "Multi Machinegun";
             } else {
                 bulletsPerShot = 12.0 * tier + RandomInt(0, 4) + rarity * RandomInt(6, 10);
                 rof = 0.8 + Random(0.2, 0.3 * tier);
                 recoil = Random(9, 17);
                 muzzVelocity = 50;
                 gunSound = cache.GetResource("Sound", "Sounds/Shotgun1.ogg");
+                techType = "Auto Triple Shotgun";
             }
             barrelLength = 0.3;
             paralell = RandomInt(0, 2) == 1;
@@ -349,12 +576,14 @@ class Gun
                 recoil = Random(1, 6);
                 muzzVelocity = 60;
                 gunSound = cache.GetResource("Sound", "Sounds/Machgun0.ogg");
+                techType = "Machine Shotgun";
             } else {
                 bulletsPerShot = 26.0 * tier + RandomInt(0, 4) + rarity * RandomInt(6, 10);
                 rof = 0.2 + Random(0.2, 0.3 * tier);
                 recoil = Random(15, 25);
                 muzzVelocity = 50;
                 gunSound = cache.GetResource("Sound", "Sounds/Shotgun2.ogg");
+                techType = "9 Barrel Shotgun";
             }
             barrelLength = 0.3;
             paralell = RandomInt(0, 2) == 1;
@@ -371,6 +600,7 @@ class Gun
                 muzzVelocity = 65;
                 gunSound = cache.GetResource("Sound", "Sounds/Laser0.ogg");
                 paralell = false;
+                techType = "Laser Assault Rifle";
             } else {
                 bulletsPerShot = 12;
                 rof = 0.8 + Random(0.2, 0.3 * tier);
@@ -378,6 +608,7 @@ class Gun
                 muzzVelocity = 60;
                 gunSound = cache.GetResource("Sound", "Sounds/Laser1.ogg");
                 paralell = true;
+                techType = "Big Thing";
             }
             
             laser = true;
@@ -385,8 +616,8 @@ class Gun
             paralell = RandomInt(0, 2) == 1;
             break;
         }
-        damage = 100 * (tier) / bulletsPerShot / rof + rarity * 10 + recoil * 3;
-        nom = generosity[rarity] + seed.ToString() + " " + (laser ? "Laser Weapon" : "Conventional Weapon");
+        damage = 100 * (tier) / bulletsPerShot / rof + rarity * 10;
+        nom = generosity[rarity] + "Model " + seed.ToString() + " " + techType;
     }
     
     void NodeApply(Node@ mchandle)
@@ -430,13 +661,12 @@ void Salamander(int stats)
     if (stats == 1)
     {
         scene_.LoadXML(cache.GetFile("Scenes/MenuScene.xml"));
+        log_ = "Coriolis Motorcycle";
         
         UIElement@ menuUI = ui.LoadLayout(cache.GetResource("XMLFile", "UI/Menu.xml"));
         menuUI.SetSize(1280, 720);
         menuUI.SetPosition((graphics.width - menuUI.width) / 2, (graphics.height - menuUI.height) / 2);
-        cast<Sprite>(menuUI.GetChild("Logo")).texture = Texture2D();
-        cast<Sprite>(menuUI.GetChild("Logo")).texture.SetNumLevels(1);
-        cast<Sprite>(menuUI.GetChild("Logo")).texture.Load("Data/Textures/MenuLogo.png");
+        Detox(cast<Sprite>(menuUI.GetChild("Logo")), "Data/Textures/MenuLogo.png");
         
         ui.root.AddChild(menuUI);
 
@@ -469,17 +699,27 @@ Array<Gun> gunStack_;
 Array<Node@> enemies_;
 float accelF_ = 0;
 float accelR_ = 0;
+float barrierSize_ = 600;
+float barrierRate_ = 2;
+float integrity_ = 1;
+Gun@ currentGun_;
+Light@ muzzleFlash_;
 Node@ camera_;
 Node@ gunThing_;
 Node@ player_;
 Node@ tiltme_;
-Light@ muzzleFlash_;
+Node@ currentTarget_;
 PhysicsWorld@ physics_;
 RigidBody@ playerRB_;
 Room@ currentRoom_;
-SoundSource@ drill_;
-SoundSource@ bulletHits_;
+Sound@ bulletHitmarker_;
 Sound@ bulletSnd_;
+SoundSource@ bulletHits_;
+SoundSource@ drill_;
+Sprite@ barrier_;
+Sprite@ healthBar_;
+Sprite@ gameHUD_;
+UIElement@ minimapGuy_;
 Vector3 prevVel_;
 
 void SpawnEnemy(String name, int health, int colour, Vector3 pos, Quaternion rot)
@@ -498,6 +738,13 @@ void Salamander(int stats)
 {
     if (stats == 1)
     {
+        accelF_ = 0;
+        accelR_ = 0;
+        barrierSize_ = 600;
+        barrierRate_ = 2;
+        integrity_ = 1;
+        
+        
         scene_.LoadXML(cache.GetFile("Scenes/Scene1.xml"));
         
 
@@ -506,8 +753,19 @@ void Salamander(int stats)
         //rb.friction = 1.0f;
         //CollisionShape@ cs = n.CreateComponent("CollisionShape");
         //cs.SetBox(Vector3::ONE);
+        currentTarget_ = scene_.GetChild("Targets").GetChild("0");
 
-
+        gameHUD_ = ui.LoadLayout(cache.GetResource("XMLFile", "UI/GameUI.xml"));
+        gameHUD_.SetSize(1280, 720);
+        gameHUD_.SetPosition((graphics.width - gameHUD_.width) / 2, (graphics.height - gameHUD_.height) / 2);
+        gameHUD_.texture = Texture2D();
+        gameHUD_.texture.SetNumLevels(1);
+        gameHUD_.texture.Load("Data/Textures/GameUI.png");
+        barrier_ = gameHUD_.GetChild("Minimap").GetChild("Circle");
+        healthBar_ = gameHUD_.GetChild("HealthBar");
+        ui.root.AddChild(gameHUD_);
+        
+        minimapGuy_ = gameHUD_.GetChild("Minimap").GetChild("You");
         
         player_ = scene_.GetChild("Player");
         playerRB_ = player_.GetComponent("RigidBody");
@@ -518,7 +776,7 @@ void Salamander(int stats)
         physics_ = scene_.GetComponent("PhysicsWorld");
         muzzleFlash_ = gunThing_.GetChild("LightThing").GetComponent("Light");
 
-        camera_.position = player_.position + Vector3(-10, 16, -5);
+        camera_.position = player_.position + Vector3(-5, 16, -10);
         camera_.LookAt(player_.position, Vector3::UP, TS_WORLD);
 
         drill_.sound.looped = true;
@@ -542,16 +800,39 @@ void Salamander(int stats)
 
         bulletHits_ = scene_.CreateComponent("SoundSource");
         bulletSnd_ = cache.GetResource("Sound", "Sounds/BulletHit.wav");
+        bulletHitmarker_ = cache.GetResource("Sound", "Sounds/hitmarker.ogg");
 
         gunStack_.Resize(1);
-        gunStack_[0].Jenerate(StringHash(log_), 7.0f);
-        gunStack_[0].NodeApply(gunThing_);
-
-
+        @currentGun_ = @gunStack_[0];
+        //currentGun_.Jenerate(StringHash(log_), 7.0f);
+        currentGun_.NodeApply(gunThing_);
+        currentGun_.Default();
+        cast<Text>(gameHUD_.GetChild("GunName")).text = currentGun_.nom + " [Lvl. " + int(currentGun_.mytier * 20 - 19) + "]";
 
     } else {
         //Print(RandomInt(11, 124));
         // Player code becuase i'm lazy
+        
+        if (integrity_ <= 0)
+        {
+            if (player_.HasComponent("RigidBody"))
+            {
+                playerRB_.Remove();
+                tiltme_.Remove();
+                cast<ParticleEmitter>(player_.GetComponent("ParticleEmitter")).emitting = true;
+                menuSounds_.frequency = 44100 * 0.5;
+                menuSounds_.gain = 1;
+                menuSounds_.Play(cache.GetResource("Sound", "Sounds/EnemyExplode.ogg"));
+                integrity_ = 0;
+            }
+            integrity_ -= delta_;
+            
+            if (integrity_ <= -2)
+            {
+                ChangeScene(S_Menu::Salamander);
+            }
+            return;
+        }
         
         // Controls
         Vector2 mcjoy(bint(input.keyDown[KEY_D]) - bint(input.keyDown[KEY_A]), bint(input.keyDown[KEY_W]) - bint(input.keyDown[KEY_S]));
@@ -594,6 +875,7 @@ void Salamander(int stats)
         tiltme_.rotation = tiltme_.rotation.Nlerp(Quaternion(Clamp(accelF_ * 2.0, -70.0, 70.0), 0, Clamp(-accelR_ * accelF_ * 0.8, -70.0, 70.0)), 0.2, true);
         // * ((Sign(accelF_) != Sign(mcjoy.y) && mcjoy.y != 0) ? -1 : 1)
         
+        
         // Sound
         drill_.frequency = (44100 * timescale_) * (Abs(accelF_) / 10 + 1) * (Abs(accelR_) / 10 + 1) * 0.5;
         drill_.gain = Lerp(drill_.gain, Clamp(Abs(accelF_ / 15) + Abs(accelR_ / 20), 0, 0.7), 0.7);
@@ -606,16 +888,32 @@ void Salamander(int stats)
             gunStack_[0].Shoot();
         }
         // LOOK AT PLAYER
-        camera_.position = player_.position + Vector3(-5 * zoom_, 8 * zoom_, -2.5 * zoom_);
+        camera_.position = player_.position + Vector3(2.5 * zoom_, 8 * zoom_, -5 * zoom_);
         camera_.LookAt(player_.position, Vector3::UP, TS_WORLD);
         camera_.Rotate(Quaternion(Random(-1, 1) * shakey_, Random(-1, 1) * shakey_, 0), TS_LOCAL);
+        
+        // Update HUD
+        minimapGuy_.position = IntVector2(player_.position.x * 0.2, -player_.position.z * 0.2);
+        barrier_.size = IntVector2(barrierSize_ * 2 * 0.2, barrierSize_ * 2 * 0.2);
+        barrierSize_ -= delta_ * barrierRate_;
+        barrier_.SetPosition(currentTarget_.position.x * 0.2 - barrier_.size.x / 2, -currentTarget_.position.z * 0.2 - barrier_.size.y / 2);
+        healthBar_.SetSize(integrity_ * 377.0, 33);
+        healthBar_.color = Color(0.5 - integrity_ * 0.5, integrity_ * 0.5, 0);
+        integrity_ = Min(1.0, integrity_ + delta_ * 0.01);
+        if (barrierSize_ < (player_.position - currentTarget_.position).length)
+        {
+            integrity_ -= delta_ * 5;
+        }
+
         //Print(currentRoom_.IsPlayerInside());
         zoom_ = Lerp(zoom_, currentRoom_.metype == 1 ? 1.4 : 1.0, 0.05);
         if (!currentRoom_.IsPlayerInside())
         {
             // if player is not in room
-            gunStack_[0].Jenerate(StringHash(log_), 1.0f);
-            gunStack_[0].NodeApply(tiltme_.GetChild("GunNode"));
+            currentGun_.Jenerate(StringHash(log_), 1.0f + float(log_.length - 15) / 20);
+            currentGun_.NodeApply(tiltme_.GetChild("GunNode"));
+            cast<Text>(gameHUD_.GetChild("GunName")).text = currentGun_.nom + " [Lvl. " + int(currentGun_.mytier * 20 - 19) + "]";
+            cast<Text>(gameHUD_.GetChild("Depth")).text = log_.length - 17;
             uint closest = -1;
             float smallest = 10000000;
             for (uint i = 0; i < 4; i ++)
@@ -633,6 +931,12 @@ void Salamander(int stats)
             Print("CLOSES: " + closest);
             currentRoom_.mahnode.Remove();
             
+            for (uint i = 0; i < enemies_.length; i ++)
+            {
+                enemies_[i].Remove();
+            }
+            enemies_.Clear();
+            
             if (("" + log_[log_.length - 1]) != ("" + ((closest + 2) % 4))[0])
             {
                 log_ += closest;
@@ -648,4 +952,16 @@ void Salamander(int stats)
     }
 }
 
+}
+
+void WinFunc(int stats)
+{
+    if (stats == 1)
+    {
+        UIElement@ menuUI = ui.LoadLayout(cache.GetResource("XMLFile", "UI/YouWin.xml"));
+        ui.root.AddChild(menuUI);
+    } else {
+
+    }
+    //Print(RandomInt(11, 124));
 }

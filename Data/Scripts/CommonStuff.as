@@ -2,7 +2,7 @@ funcdef void SCENEFUNCTION(int);
 
 Array<Room> rooms_;
 //Array<String> companies = {"Delikhoi", "Gotzietek", "Xokeshi Industries", "Vendoralenger", "Notcirronede", "Notkaytrav"}
-Array<String> generosity = {"Box Type G-", "Rare R-", "Vintage $200 T-"};
+Array<String> generosity = {"Fresh ", "Rare ", "Vintage $200 "};
 bool ffirst_;
 float delta_;
 float time_ = 0;
@@ -12,7 +12,7 @@ float zoom_ = 1.0;
 SCENEFUNCTION@ sceneFunc_;
 Scene@ scene_;
 SoundSource@ menuSounds_;
-String log_ = "Coriolis Motor" + RandomInt(3, 123123);
+String log_ = "Coriolis Motorcycle";
 
 void ChangeScene(SCENEFUNCTION@ to)
 {
@@ -22,6 +22,13 @@ void ChangeScene(SCENEFUNCTION@ to)
     sceneFunc_ = to;
     time_ = 0;
     ffirst_ = true;
+}
+
+void Detox(Sprite@ t, String res)
+{
+    t.texture = Texture2D();
+    t.texture.SetNumLevels(1);
+    t.texture.Load(res);
 }
 
 int bint(bool b)

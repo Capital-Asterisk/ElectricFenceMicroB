@@ -1,15 +1,18 @@
 funcdef void SCENEFUNCTION(int);
 
-Scene@ scene_;
-SoundSource@ menuSounds_;
-SCENEFUNCTION@ sceneFunc_;
-String log_ = "Coriolis Motorcyc";
 Array<Room> rooms_;
+//Array<String> companies = {"Delikhoi", "Gotzietek", "Xokeshi Industries", "Vendoralenger", "Notcirronede", "Notkaytrav"}
+Array<String> generosity = {"Box Type G-", "Rare R-", "Vintage $200 T-"};
 bool ffirst_;
 float delta_;
 float time_ = 0;
 float timescale_ = 1.0;
-
+float shakey_ = 0;
+float zoom_ = 1.0;
+SCENEFUNCTION@ sceneFunc_;
+Scene@ scene_;
+SoundSource@ menuSounds_;
+String log_ = "Coriolis Motor" + RandomInt(3, 123123);
 
 void ChangeScene(SCENEFUNCTION@ to)
 {

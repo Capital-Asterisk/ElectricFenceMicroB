@@ -45,6 +45,7 @@ void HandleUpdate(StringHash eventType, VariantMap& eventData)
     delta_ = eventData["TimeStep"].GetFloat();
     time_ += delta_ * timescale_;
     sceneFunc_(stat);
+    shakey_ = shakey_ * 0.7;
 }
 
 namespace S_VIntro

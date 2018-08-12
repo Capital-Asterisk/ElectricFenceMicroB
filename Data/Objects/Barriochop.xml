@@ -1,0 +1,23 @@
+<?xml version="1.0"?>
+<node id="24">
+	<attribute name="Is Enabled" value="true" />
+	<attribute name="Name" value="EnemyBarriochop" />
+	<attribute name="Tags" />
+	<attribute name="Position" value="0 1.87544 0" />
+	<attribute name="Rotation" value="1 0 0 0" />
+	<attribute name="Scale" value="1 1 1" />
+	<attribute name="Variables" />
+	<component type="StaticModel" id="66">
+		<attribute name="Model" value="Model;Models/Barriachop.mdl" />
+		<attribute name="Material" value="Material;Materials/Enemy0.xml" />
+	</component>
+	<component type="RigidBody" id="68">
+		<attribute name="Physics Rotation" value="1 0 0 0" />
+		<attribute name="Physics Position" value="0 1.87544 0" />
+	</component>
+	<component type="CollisionShape" id="69">
+		<attribute name="Shape Type" value="Cone" />
+		<attribute name="Size" value="1 1.3 1" />
+		<attribute name="Offset Position" value="0 0.2 0" />
+	</component>
+</node>

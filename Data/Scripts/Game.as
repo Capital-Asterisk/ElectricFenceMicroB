@@ -17,6 +17,31 @@ class Hubhub : ScriptObject
 
 }
 
+class Meat : ScriptObject
+{
+
+    int health;
+
+    Meat()
+    {
+        Print("enemy was made");
+    }
+
+    void WorldCollision(VariantMap& eventData)
+    {
+        Print("MASH");
+    }
+
+}
+
+class BoxCaterpillar : Meat
+{
+    
+    void FixedUpdate(float delta)
+    {
+        node.rotation = Quaternion(0, node.rotation.yaw, Sin(time_ * 180) * 30.0);
+    }
+}
 
 // nothing roblox related
 class BSMBullet : ScriptObject
@@ -25,7 +50,7 @@ class BSMBullet : ScriptObject
     Vector3 pxt;
     String tgt;
     uint lifetime = 60;
-    int b;
+    int damage;
 
     BSMBullet()
     {
@@ -38,7 +63,7 @@ class BSMBullet : ScriptObject
         Scene@ e = cast<Scene@>(node.parent);
         //cast<RigidBody@>(node.GetComponent("RigidBody")).linearVelocity = Vector3(0, 1, 0);
         PhysicsRaycastResult prr = S_Game::physics_.RaycastSingle(Ray(node.position, pxt.Normalized() * 0.1), pxt.length * 2 * d * timescale_);
-        Print("HIT: " + prr.position.ToString());
+        //Print("HIT: " + prr.position.ToString());
         lifetime --;
         if (prr.body !is null)
         {
@@ -46,7 +71,7 @@ class BSMBullet : ScriptObject
             if (boom.name.StartsWith("Wall") or boom.name.StartsWith("Door"))
             {
                 // A wall was hit
-                Print("AAAAA");
+                //Print("AAAAA");
                 lifetime = 0;
                 S_Game::bulletHits_.Play(S_Game::bulletSnd_);
                 S_Game::bulletHits_.frequency = 44100 * timescale_ * Random(0.9, 1.2);
@@ -193,6 +218,7 @@ class Room
                 minecraft.model = floorMod;
                 minecraft.material = floorMat;
                 aa.position = Vector3(float(x) - float(wid) / 2 + 0.5, 0, float(y) - float(hei) / 2 + 0.5);
+                S_Game::SpawnEnemy("BoxCaterpillar", 70, 0, aa.position + Vector3(0, 1, 0), Quaternion(0, 0, 0));
             }
         }
         Material@ wallmart = cache.GetResource("Material", "Materials/Wall" + (0) + ".xml");
@@ -263,7 +289,7 @@ class Gun
             BSMBullet@ so = cast<BSMBullet@>(n.CreateScriptObject(scriptFile, "BSMBullet", LOCAL));
             so.pxt = n.rotation * Vector3(0, 0, 20) + S_Game::playerRB_.linearVelocity;
             so.lifetime = 120;
-            so.b = 3;
+            //so.b = 3;
         }
         S_Game::muzzleFlash_.brightness = mytier / 8 + float(bulletsPerShot) / 14;
         S_Game::muzzleFlash_.color = laser ? Color(0.2, 0.8, 1.0) : Color(1.0, 0.8, 0.2);
@@ -440,6 +466,7 @@ namespace S_Game
 {
 
 Array<Gun> gunStack_;
+Array<Node@> enemies_;
 float accelF_ = 0;
 float accelR_ = 0;
 Node@ camera_;
@@ -454,6 +481,17 @@ SoundSource@ drill_;
 SoundSource@ bulletHits_;
 Sound@ bulletSnd_;
 Vector3 prevVel_;
+
+void SpawnEnemy(String name, int health, int colour, Vector3 pos, Quaternion rot)
+{
+    Node@ enemy = scene_.InstantiateXML(cache.GetResource("XMLFile", "Objects/" + name + ".xml"), pos, rot);
+    cast<StaticModel>(enemy.GetComponent("StaticModel")).material = cache.GetResource("Material", "Materials/Enemy" + colour + ".xml");
+    Meat@ so = cast<Meat@>(enemy.CreateScriptObject(scriptFile, name, LOCAL));
+    so.health = health;
+    
+    scene_.AddChild(enemy);
+    enemies_.Push(enemy);
+}
 
 // Game stuff go here
 void Salamander(int stats)
@@ -485,6 +523,7 @@ void Salamander(int stats)
 
         drill_.sound.looped = true;
         drill_.Play(drill_.sound);
+        
 
         Node@ nnnnn = scene_.CreateChild("Laran");
         @currentRoom_ = Room();

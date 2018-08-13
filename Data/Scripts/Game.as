@@ -486,7 +486,7 @@ class Gun
         {
             Node@ n = scene_.CreateChild("Laran");
             n.position = S_Game::gunThing_.LocalToWorld(Vector3(0, 0, barrelLength));
-            n.rotation = S_Game::gunThing_.worldRotation * Quaternion(Random(-recoil, recoil) * 0.2, Random(-recoil, recoil), 0);
+            n.rotation = Quaternion(S_Game::gunThing_.worldRotation.pitch, S_Game::gunThing_.worldRotation.yaw, 0) * Quaternion(Random(-recoil, recoil) * 0.2, Random(-recoil, recoil), 0);
             StaticModel@ model = n.CreateComponent("StaticModel");
             model.model = bulletmdl;
             model.material = bulletmtl;

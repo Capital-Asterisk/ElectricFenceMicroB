@@ -7,8 +7,8 @@
 	<attribute name="Elapsed Time" value="0" />
 	<attribute name="Next Replicated Node ID" value="35" />
 	<attribute name="Next Replicated Component ID" value="99" />
-	<attribute name="Next Local Node ID" value="16777236" />
-	<attribute name="Next Local Component ID" value="16777384" />
+	<attribute name="Next Local Node ID" value="16777237" />
+	<attribute name="Next Local Component ID" value="16777396" />
 	<attribute name="Variables" />
 	<attribute name="Variable Names" value="" />
 	<component type="Octree" id="1">
@@ -2260,19 +2260,6 @@
 		</component>
 		<component type="CollisionShape" id="46">
 			<attribute name="Shape Type" value="StaticPlane" />
-		</component>
-	</node>
-	<node id="22">
-		<attribute name="Is Enabled" value="true" />
-		<attribute name="Name" value="" />
-		<attribute name="Tags" />
-		<attribute name="Position" value="-0.31228 0.743734 0.200372" />
-		<attribute name="Rotation" value="1 0 0 0" />
-		<attribute name="Scale" value="1 1 1" />
-		<attribute name="Variables" />
-		<component type="StaticModel" id="63">
-			<attribute name="Model" value="Model;Models/Bullet.mdl" />
-			<attribute name="Material" value="Material;Materials/Bullet0.xml" />
 		</component>
 	</node>
 	<node id="27">

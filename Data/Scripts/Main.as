@@ -24,7 +24,7 @@ void Start()
     // make some randomness random
     SetRandomSeed(time.systemTime);
 
-    ChangeScene(@S_Menu::Salamander);
+    ChangeScene(@S_VIntro::Salamander);
 
 }
 
@@ -157,7 +157,7 @@ void Salamander(int stats)
         
         if (cache.numBackgroundLoadResources == 0 && time_ > 3)
         {
-            ChangeScene(@S_Game::Salamander);
+            ChangeScene(@S_Menu::Salamander);
         }
         
     }

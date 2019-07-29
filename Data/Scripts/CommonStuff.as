@@ -6,7 +6,7 @@ Array<String> generosity = {"Fresh ", "Rare ", "Vintage $200 "};
 bool ffirst_;
 float delta_;
 float time_ = 0;
-float timescale_ = 1.0;
+float timescale_ = 1;
 float shakey_ = 0;
 float zoom_ = 1.0;
 SCENEFUNCTION@ sceneFunc_;

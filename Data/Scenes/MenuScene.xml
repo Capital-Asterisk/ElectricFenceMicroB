@@ -21,7 +21,7 @@
 		<attribute name="Is Enabled" value="true" />
 		<attribute name="Name" value="CameraNode" />
 		<attribute name="Tags" />
-		<attribute name="Position" value="-0.569608 0.284811 -2.1129" />
+		<attribute name="Position" value="-0.4 0.284811 -2.1129" />
 		<attribute name="Rotation" value="1 0 0 0" />
 		<attribute name="Scale" value="1 1 1" />
 		<attribute name="Variables" />

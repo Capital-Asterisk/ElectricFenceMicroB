@@ -19,8 +19,10 @@ class Hubhub : ScriptObject
 
 class Meat : ScriptObject
 {
-
+    
+    int level;
     float health;
+    float redness = 0;
 
     Meat()
     {
@@ -35,6 +37,7 @@ class BoxCaterpillar : Meat
 {
     int randoms;
     int deathAnimation = 40;
+    Material@ matClone;
     
     BoxCaterpillar()
     {
@@ -44,6 +47,10 @@ class BoxCaterpillar : Meat
     void DelayedStart()
     {
         SubscribeToEvent(node, "NodeCollision", "HandleNodeCollision");
+        StaticModel@ model = cast<StaticModel>(node.GetComponent("StaticModel"));
+        Material@ oldMaterial = model.materials[0];
+        model.material = oldMaterial.Clone();
+        matClone = model.materials[0];
     }
     
     void HandleNodeCollision(StringHash evtType, VariantMap& evtData)
@@ -51,8 +58,22 @@ class BoxCaterpillar : Meat
         Node@ smashed = evtData["OtherNode"].GetPtr();
         if (smashed is S_Game::player_)
         {
-            S_Game::integrity_ -= 0.02;
-            cast<RigidBody>(node.GetComponent("RigidBody")).ApplyImpulse(node.rotation * Vector3::BACK);
+            if (smashed is S_Game::player_)
+            {
+                if (Abs(S_Game::accelF_) > 15 || cast<RigidBody>(S_Game::player_.GetComponent("RigidBody")).linearVelocity.y < -1)
+                {
+                    S_Game::accelF_ *= 0.95;
+                    health = 0;
+                }
+                else
+                {
+                    S_Game::integrity_ -= 0.004 + level * 0.00002;
+                    cast<RigidBody>(node.GetComponent("RigidBody")).ApplyImpulse(node.rotation * Vector3::BACK);
+                    
+                    cast<RigidBody>(S_Game::player_.GetComponent("RigidBody")).ApplyImpulse(node.rotation * Vector3::FORWARD * -10.0 * Min(float(level) / 80.0, 1.0));
+                }
+            }
+
         }
     }
     
@@ -66,8 +87,13 @@ class BoxCaterpillar : Meat
             {
                 node.RemoveComponent("RigidBody");
                 node.RemoveComponent("StaticModel");
+                cast<SoundSource>(node.GetComponent("SoundSource")).frequency *= timescale_;
                 cast<SoundSource>(node.GetComponent("SoundSource")).Play(cache.GetResource("Sound", "Sounds/EnemyExplode.ogg"));
                 cast<ParticleEmitter>(node.GetComponent("ParticleEmitter")).emitting = true;
+                if (S_Game:: integrity_ > 0)
+                {
+                    S_Game:: integrity_ = Min(1.0, S_Game::integrity_ + 0.05);
+                }
             } else if (deathAnimation == 0)
             {
                 node.Remove();
@@ -75,10 +101,14 @@ class BoxCaterpillar : Meat
             
         } else {
             node.LookAt(S_Game::player_.position, Vector3::UP, TS_WORLD);
-            cast<RigidBody>(node.GetComponent("RigidBody")).ApplyForce(node.rotation * Vector3::FORWARD * 0.5);
+            Print(level);
+            cast<RigidBody>(node.GetComponent("RigidBody")).ApplyForce(node.rotation * Vector3::FORWARD * 10.0 * Min(float(level) / 80.0, 1.0));
             node.position = Vector3(node.position.x, 0.5, node.position.z);
             node.rotation = Quaternion(0, node.rotation.yaw, Sin(time_ * 180 + randoms) * 30.0);
         }
+        
+        matClone.shaderParameters["MatEmissiveColor"] = Variant(Vector3(redness * 5, redness * 5, redness * 0.3));
+        redness *= 0.2;
     }
 }
 
@@ -86,6 +116,8 @@ class Barriochop : Meat
 {
     int randoms;
     int deathAnimation = 40;
+    Material@ matClone;
+    
     
     Barriochop()
     {
@@ -95,6 +127,10 @@ class Barriochop : Meat
     void DelayedStart()
     {
         SubscribeToEvent(node, "NodeCollision", "HandleNodeCollision");
+        StaticModel@ model = cast<StaticModel>(node.GetComponent("StaticModel"));
+        Material@ oldMaterial = model.materials[0];
+        model.material = oldMaterial.Clone();
+        matClone = model.materials[0];
     }
     
     void HandleNodeCollision(StringHash evtType, VariantMap& evtData)
@@ -102,8 +138,21 @@ class Barriochop : Meat
         Node@ smashed = evtData["OtherNode"].GetPtr();
         if (smashed is S_Game::player_)
         {
-            S_Game::integrity_ -= 0.01;
-            //cast<RigidBody>(S_Game::player_.GetComponent("RigidBody")).ApplyImpulse(node.rotation * Vector3::BACK);
+            if (Abs(S_Game::accelF_) > 15)
+            {
+                health = 0;
+                
+                if (input.scancodeDown[SCANCODE_SHIFT])
+                {
+                    cast<RigidBody>(S_Game::player_.GetComponent("RigidBody")).ApplyImpulse(node.rotation * Vector3::FORWARD * -1000);
+                }
+            } else {
+                S_Game::integrity_ -= 0.01;
+            }
+            if (input.scancodeDown[SCANCODE_SHIFT])
+            {
+            cast<RigidBody>(S_Game::player_.GetComponent("RigidBody")).ApplyImpulse(Vector3(0, 50, 0));
+            }
         }
     }
     
@@ -117,8 +166,13 @@ class Barriochop : Meat
             {
                 node.RemoveComponent("RigidBody");
                 node.RemoveComponent("StaticModel");
+                cast<SoundSource>(node.GetComponent("SoundSource")).frequency *= timescale_;
                 cast<SoundSource>(node.GetComponent("SoundSource")).Play(cache.GetResource("Sound", "Sounds/EnemyExplode.ogg"));
                 cast<ParticleEmitter>(node.GetComponent("ParticleEmitter")).emitting = true;
+                if (S_Game:: integrity_ > 0)
+                {
+                    S_Game:: integrity_ = Min(1.0, S_Game::integrity_ + 0.05);
+                }
             } else if (deathAnimation == 0)
             {
                 node.Remove();
@@ -127,6 +181,9 @@ class Barriochop : Meat
         } else {
             
         }
+        
+        matClone.shaderParameters["MatEmissiveColor"] = Variant(Vector3(redness * 5, redness * 0.3, redness * 0.3));
+        redness *= 0.2;
     }
 }
 
@@ -134,10 +191,20 @@ class Generator : Meat
 {
     int randoms;
     int deathAnimation = 40;
+    Material@ matClone;
     
     Generator()
     {
         randoms = RandomInt(0, 360);
+    }
+
+    void DelayedStart()
+    {
+        StaticModel@ model = cast<StaticModel>(node.GetComponent("StaticModel"));
+        Material@ oldMaterial = model.materials[0];
+        model.material = oldMaterial.Clone();
+        matClone = model.materials[0];
+        S_Game::gameHUD_.GetChild("Minimap").GetChild(S_Game::currentTarget_.name).visible = false;
     }
     
     void FixedUpdate(float data)
@@ -150,6 +217,7 @@ class Generator : Meat
             {
                 node.RemoveComponent("RigidBody");
                 node.RemoveComponent("StaticModel");
+                cast<SoundSource>(node.GetComponent("SoundSource")).frequency *= timescale_;
                 cast<SoundSource>(node.GetComponent("SoundSource")).Play(cache.GetResource("Sound", "Sounds/EnemyExplode.ogg"));
                 cast<ParticleEmitter>(node.GetComponent("ParticleEmitter")).emitting = true;
             } else if (deathAnimation == 0)
@@ -177,6 +245,8 @@ class Generator : Meat
             //cast<RigidBody>(node.GetComponent("RigidBody")).ApplyForce(node.rotation * Vector3::FORWARD);
             //node.position = Vector3(node.position.x, 0.5, node.position.z);
             //node.rotation = Quaternion(0, node.rotation.yaw, Sin(time_ * 180 + randoms) * 30.0);
+            matClone.shaderParameters["MatEmissiveColor"] = Variant(Vector3(redness * 5, redness * 0.3, redness * 0.3));
+            redness *= 0.2;
         }
     }
 }
@@ -189,6 +259,7 @@ class BSMBullet : ScriptObject
     String tgt;
     uint lifetime = 60;
     float damage;
+    bool fuck = false;
 
     BSMBullet()
     {
@@ -200,7 +271,7 @@ class BSMBullet : ScriptObject
         //Print(b);
         Scene@ e = cast<Scene@>(node.parent);
         //cast<RigidBody@>(node.GetComponent("RigidBody")).linearVelocity = Vector3(0, 1, 0);
-        PhysicsRaycastResult prr = S_Game::physics_.RaycastSingle(Ray(node.position, pxt.Normalized() * 0.1), pxt.length * 2 * d * timescale_);
+        PhysicsRaycastResult prr = S_Game::physics_.RaycastSingle(Ray(node.position, pxt.Normalized() * 0.1), pxt.length * 2 * d);
         //Print("HIT: " + prr.position.ToString());
         lifetime --;
         if (prr.body !is null)
@@ -216,18 +287,29 @@ class BSMBullet : ScriptObject
                 S_Game::bulletHits_.frequency = 44100 * timescale_ * Random(0.9, 1.2);
             } else if (boom.name.StartsWith("Enemy"))
             {
-                lifetime = 0;
-                
+                if (!fuck)
+                {
+                    lifetime = 0;
+                } else {
+                    //Print("FUCK!");
+                }
                 S_Game::bulletHits_.Play(S_Game::bulletHitmarker_);
-                S_Game::bulletHits_.frequency = 44100;
+                S_Game::bulletHits_.frequency = 44100 * timescale_;
                 Meat@ m = cast<Meat@>(boom.GetScriptObject());
                 m.health -= damage;
+                m.redness += 1;
             }
             
         } else {
             
         }
-        node.position += pxt * d * timescale_;
+        
+        if (!S_Game::currentRoom_.IsInside(node))
+        {
+            lifetime = 0;
+        }
+        
+        node.position += pxt * d;
         if (lifetime == 0)
         {
             node.Remove();
@@ -254,9 +336,9 @@ class Room
         generated = false;
     }
     
-    bool IsPlayerInside()
+    bool IsInside(Node@ node)
     {
-        Vector3 TPose(mahnode.position - S_Game::player_.position);
+        Vector3 TPose(mahnode.position - node.position);
         return (Abs(TPose.x) < wid / 2 + 2 && Abs(TPose.z) < hei / 2 + 2);
         
     }
@@ -275,7 +357,7 @@ class Room
     {
         for (int i = 0; i < 4; i ++)
         {
-            if (doors[i] != -1 && i != (doorlink + 2) % 4 && metype != 1 && RandomInt(0, 2) == 0)
+            if (doors[i] != -1 && i != (doorlink + 2) % 4 && metype != 0 && RandomInt(0, 2) == 0)
             {
                 Node@ door = mahnode.GetChild("Door" + i);
                 S_Game::SpawnEnemy("Barriochop", 300, 0, mahnode.position + door.position + door.rotation * Vector3(0, -0.2, -2), door.rotation * Quaternion(0, 180, 0));
@@ -308,20 +390,20 @@ class Room
             // small boia
             wid = RandomInt(6, 10);
             hei = RandomInt(6, 10);
-            enemyCount = RandomInt(0, wid * hei * 0.1);
+            enemyCount = RandomInt(wid * hei * 0.1, wid * hei * 0.5);
             break;
         case 1:
             // big boi
             wid = RandomInt(12, 32);
             hei = RandomInt(12, 32);
-            enemyCount = RandomInt(0, wid * hei * 0.1);
+            enemyCount = RandomInt(wid * hei * 0.1, wid * hei * 0.5);
             break;
         case 2:
             // long boi
             wid = RandomInt(2, 5) + Abs(dirY) * RandomInt(20, 40);
             hei = RandomInt(2, 5) + Abs(dirX) * RandomInt(20, 40);
             doors[Abs(dirY)] = RandomInt(0, Min(wid, hei) - 1);
-            doors[Abs(dirY) + 2] = RandomInt(0, Min(wid, hei) - 1);
+            doors[Abs(dirY) + 2] = doors[Abs(dirY)];
             
             break;
         }
@@ -423,7 +505,7 @@ class Room
         if ((S_Game::currentTarget_.position - mahnode.position).length < 40)
         {
             DoorLock(true);
-            S_Game::SpawnEnemy("Generator", 1000, 0, mahnode.position, Quaternion(0, 0, 0));
+            S_Game::SpawnEnemy("Generator", 4000, 0, mahnode.position, Quaternion(0, 0, 0));
         }
         
         // Stuff spawning
@@ -491,15 +573,16 @@ class Gun
             model.model = bulletmdl;
             model.material = bulletmtl;
             BSMBullet@ so = cast<BSMBullet@>(n.CreateScriptObject(scriptFile, "BSMBullet", LOCAL));
-            so.pxt = n.rotation * Vector3(0, 0, 20) + S_Game::playerRB_.linearVelocity;
+            so.pxt = n.rotation * Vector3(0, 0, muzzVelocity * Random(0.9, 1.1)) + S_Game::playerRB_.linearVelocity;
             so.lifetime = 120;
+            so.fuck = paralell;
             so.damage = damage;
             //so.b = 3;
         }
-        Print("DamagePerShot: " + damage);
+        //Print("DamagePerShot: " + damage);
         S_Game::muzzleFlash_.brightness = mytier / 8 + float(bulletsPerShot) / 14;
         S_Game::muzzleFlash_.color = laser ? Color(0.2, 0.8, 1.0) : Color(1.0, 0.8, 0.2);
-        shakey_ += laser ? 0.1 : float(bulletsPerShot) / 14;
+        shakey_ += laser ? 0.1 : float(bulletsPerShot) / 140;
         notsrc.frequency = timescale_ * soundPitch * 44100;
         notsrc.Play(gunSound);
         lastshot = 0;
@@ -514,12 +597,13 @@ class Gun
         mytier = 1;
         soundPitch = 1.4;
         paralell = false;
-        bulletsPerShot = 1;
+        laser = false;
+        bulletsPerShot = 6;
         rof = 15;
-        recoil = 3;
-        muzzVelocity = 60;
+        recoil = 4;
+        muzzVelocity = 30;
         gunSound = cache.GetResource("Sound", "Sounds/Machgun0.ogg");
-        damage = 100 / bulletsPerShot / rof + rarity * 10;
+        damage = 10;
         nom = "Gotzietek LD42 Autorifle";
     }
 
@@ -531,7 +615,7 @@ class Gun
         barrel = RandomInt(0, 6);
         handle = RandomInt(0, 6);
         mytier = tier;
-        soundPitch = Random(0.9, 1.3);
+        soundPitch = Random(0.9, 1.3) * timescale_;
         paralell = false;
         String techType;
         switch (barrel)
@@ -539,33 +623,33 @@ class Gun
         case 0:
             bulletsPerShot = 12.0 * tier + RandomInt(0, 4) + rarity * RandomInt(6, 10);
             rof = 0.8 + Random(0.2, 0.3 * tier);
-            recoil = Random(8, 10);
+            recoil = 90;
             paralell = false;
-            muzzVelocity = 40;
+            muzzVelocity = 20;
             barrelLength = 0.3;
             laser = false;
             gunSound = cache.GetResource("Sound", "Sounds/Shotgun0.ogg");
-            techType = "Auto Double Shotgun";
+            techType = "Non-Precision Shotgun";
             break;
         case 1:
             if (RandomInt(0, 2) == 1)
             {
-                bulletsPerShot = 1.0 + RandomInt(0, 4) + rarity * RandomInt(6, 10);
+                bulletsPerShot = 1.0 + RandomInt(0, 3) + rarity * RandomInt(6, 10);
                 rof = 6.8 + Random(0, tier);
-                recoil = Random(1, 6);
-                muzzVelocity = 60;
+                recoil = Random(20, 90);
+                muzzVelocity = 20;
                 gunSound = cache.GetResource("Sound", "Sounds/Machgun0.ogg");
                 techType = "Multi Machinegun";
             } else {
                 bulletsPerShot = 12.0 * tier + RandomInt(0, 4) + rarity * RandomInt(6, 10);
                 rof = 0.8 + Random(0.2, 0.3 * tier);
-                recoil = Random(9, 17);
-                muzzVelocity = 50;
+                recoil = Random(10, 30);
+                muzzVelocity = 20;
                 gunSound = cache.GetResource("Sound", "Sounds/Shotgun1.ogg");
                 techType = "Auto Triple Shotgun";
             }
             barrelLength = 0.3;
-            paralell = RandomInt(0, 2) == 1;
+            paralell = false;
             laser = false;
             break;
         case 2:
@@ -573,20 +657,22 @@ class Gun
             {
                 bulletsPerShot = 5.0 + RandomInt(0, 4) + rarity * RandomInt(6, 10);
                 rof = 18.8 + Random(0, tier);
-                recoil = Random(1, 6);
-                muzzVelocity = 60;
+                recoil = Random(15, 25);
+                muzzVelocity = 20;
                 gunSound = cache.GetResource("Sound", "Sounds/Machgun0.ogg");
                 techType = "Machine Shotgun";
+                paralell = false;
             } else {
                 bulletsPerShot = 26.0 * tier + RandomInt(0, 4) + rarity * RandomInt(6, 10);
-                rof = 0.2 + Random(0.2, 0.3 * tier);
+                rof = 0.2 + Random(0.2, 0.4);
                 recoil = Random(15, 25);
-                muzzVelocity = 50;
+                muzzVelocity = 20;
                 gunSound = cache.GetResource("Sound", "Sounds/Shotgun2.ogg");
                 techType = "9 Barrel Shotgun";
+                paralell = true;
             }
             barrelLength = 0.3;
-            paralell = RandomInt(0, 2) == 1;
+            
             laser = false;
             break;
         case 3:
@@ -595,28 +681,29 @@ class Gun
             {
                 bulletsPerShot = 1;
                 rof = 12.8 + Random(0, tier);
-                recoil = Random(1, 6);
+                recoil = Random(0.0, 0.5);
                 
-                muzzVelocity = 65;
+                muzzVelocity = 40;
                 gunSound = cache.GetResource("Sound", "Sounds/Laser0.ogg");
-                paralell = false;
                 techType = "Laser Assault Rifle";
             } else {
                 bulletsPerShot = 12;
                 rof = 0.8 + Random(0.2, 0.3 * tier);
-                recoil = Random(9, 17);
-                muzzVelocity = 60;
+                recoil = 22.8 + Random(0, tier);
+                muzzVelocity = 40;
                 gunSound = cache.GetResource("Sound", "Sounds/Laser1.ogg");
-                paralell = true;
+                
                 techType = "Big Thing";
             }
             
+            paralell = true;
             laser = true;
             barrelLength = 0.3;
-            paralell = RandomInt(0, 2) == 1;
             break;
         }
-        damage = 100 * (tier) / bulletsPerShot / rof + rarity * 10;
+        //bulletsPerShot *= 10;
+        damage = 40 * (tier) / bulletsPerShot / rof * (1.0 + recoil / 29.0f) + rarity * 10;
+        rof *= 10;
         nom = generosity[rarity] + "Model " + seed.ToString() + " " + techType;
     }
     
@@ -728,6 +815,7 @@ void SpawnEnemy(String name, int health, int colour, Vector3 pos, Quaternion rot
     cast<StaticModel>(enemy.GetComponent("StaticModel")).material = cache.GetResource("Material", "Materials/Enemy" + colour + ".xml");
     Meat@ so = cast<Meat@>(enemy.CreateScriptObject(scriptFile, name, LOCAL));
     so.health = health;
+    so.level = log_.length - 18;
     
     scene_.AddChild(enemy);
     enemies_.Push(enemy);
@@ -809,12 +897,17 @@ void Salamander(int stats)
         currentGun_.Default();
         cast<Text>(gameHUD_.GetChild("GunName")).text = currentGun_.nom + " [Lvl. " + int(currentGun_.mytier * 20 - 19) + "]";
 
+        //physics_.fps = (3);
+        scene_.timeScale = timescale_;
+  
     } else {
         //Print(RandomInt(11, 124));
         // Player code becuase i'm lazy
         
         if (integrity_ <= 0)
         {
+            accelF_ = 0;
+            accelR_ = 0;
             if (player_.HasComponent("RigidBody"))
             {
                 playerRB_.Remove();
@@ -847,7 +940,7 @@ void Salamander(int stats)
                 accelF_ = 0;
             }
         } else {
-            accelF_ = Clamp(accelF_ + mcjoy.y * delta_ * 10.0 * (Sign(accelF_) != Sign(mcjoy.y) ? 6 : 1), -20.0, 20.0);
+            accelF_ = Clamp(accelF_ + mcjoy.y * delta_ * 40.0 * (Sign(accelF_) != Sign(mcjoy.y) ? 6 : 1), -20.0, 20.0);
         }
         
         if (mcjoy.x == 0)
@@ -866,13 +959,14 @@ void Salamander(int stats)
         if (deltavee.length > 2)
         {
             SoundSource@ ss = tiltme_.GetComponent("SoundSource");
+            ss.frequency = 44100 * timescale_;
             ss.Play(ss.sound);
         }
         
         playerRB_.angularVelocity = Vector3(0, accelR_, 0);
         playerRB_.linearVelocity = playerRB_.linearVelocity.Lerp(playerRB_.rotation * Vector3::FORWARD * accelF_ + Vector3(0, playerRB_.linearVelocity.y, 0), 0.5);
         prevVel_ = playerRB_.linearVelocity;
-        tiltme_.rotation = tiltme_.rotation.Nlerp(Quaternion(Clamp(accelF_ * 2.0, -70.0, 70.0), 0, Clamp(-accelR_ * accelF_ * 0.8, -70.0, 70.0)), 0.2, true);
+        tiltme_.rotation = tiltme_.rotation.Nlerp(Quaternion(Clamp(accelF_ * 2.0, -70.0, 70.0), 0, Clamp(0 * -accelR_ * accelF_ * 0.8, -70.0, 70.0)), 0.2, true);
         // * ((Sign(accelF_) != Sign(mcjoy.y) && mcjoy.y != 0) ? -1 : 1)
         
         
@@ -907,7 +1001,7 @@ void Salamander(int stats)
 
         //Print(currentRoom_.IsPlayerInside());
         zoom_ = Lerp(zoom_, currentRoom_.metype == 1 ? 1.4 : 1.0, 0.05);
-        if (!currentRoom_.IsPlayerInside())
+        if (!currentRoom_.IsInside(player_))
         {
             // if player is not in room
             currentGun_.Jenerate(StringHash(log_), 1.0f + float(log_.length - 15) / 20);

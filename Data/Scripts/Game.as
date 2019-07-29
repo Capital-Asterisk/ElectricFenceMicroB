@@ -656,7 +656,7 @@ class Gun
             if (RandomInt(0, 2) == 1)
             {
                 bulletsPerShot = 5.0 + RandomInt(0, 4) + rarity * RandomInt(6, 10);
-                rof = 18.8 + Random(0, tier);
+                rof = 8.8 + Random(0, tier);
                 recoil = Random(15, 25);
                 muzzVelocity = 20;
                 gunSound = cache.GetResource("Sound", "Sounds/Machgun0.ogg");
@@ -748,7 +748,7 @@ void Salamander(int stats)
     if (stats == 1)
     {
         scene_.LoadXML(cache.GetFile("Scenes/MenuScene.xml"));
-        log_ = "Coriolis Motorcycle";
+        log_ = "moist    Motorcycle";
         
         UIElement@ menuUI = ui.LoadLayout(cache.GetResource("XMLFile", "UI/Menu.xml"));
         menuUI.SetSize(1280, 720);
